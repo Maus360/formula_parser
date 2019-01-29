@@ -71,7 +71,11 @@ class Parser:
         if self.__accept("SYMBOL"):
             return True
         elif self.__accept("LPAREN"):
-            if self.__accept("NEGATIVE"):
+            return self.__complex_unary_formula()
+        return False
+
+    def __complex_unary_formula(self):
+        if self.__accept("NEGATIVE"):
                 result = self.__formula()
                 if not result:
                     return False
@@ -79,16 +83,15 @@ class Parser:
                     return True
                 else:
                     return False
-            result = self.__complex_binary_formula()
-            if result:
-                if self.__accept("RPAREN"):
-                    return True
-                else:
-                    return False
+        result = self.__complex_binary_formula()
+        if result:
+            if self.__accept("RPAREN"):
+                return True
             else:
                 return False
-        return False
-
+        else:
+            return False
+    
     def __complex_binary_formula(self):
         result = self.__formula()
         if not result:
