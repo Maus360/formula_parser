@@ -46,7 +46,11 @@ class Parser:
         self.next_token = None
         self.__counter = 0
         self.__advance()
-        return self.__formula()
+        if self.__formula():
+            if not self.next_token:
+                return True, self.__counter
+            return False
+        return False
 
     def __advance(self):
         self.token, self.next_token = self.next_token, next(self.tokens, None)
@@ -64,11 +68,10 @@ class Parser:
 
     def __formula(self):
         self.__counter += 1
-        print(self.__counter)
         if self.__accept("NUM"):
             self.__counter -= 1
             return True
-        if self.__accept("SYMBOL"):
+        elif self.__accept("SYMBOL"):
             return True
         elif self.__accept("LPAREN"):
             return self.__complex_unary_formula()
@@ -76,25 +79,17 @@ class Parser:
 
     def __complex_unary_formula(self):
         if self.__accept("NEGATIVE"):
-                result = self.__formula()
-                if not result:
-                    return False
-                if self.__accept("RPAREN"):
-                    return True
-                else:
-                    return False
+            if not self.__formula():
+                return False
+            return self.__accept("RPAREN")
         result = self.__complex_binary_formula()
         if result:
-            if self.__accept("RPAREN"):
-                return True
-            else:
-                return False
+            return self.__accept("RPAREN")
         else:
             return False
-    
+
     def __complex_binary_formula(self):
-        result = self.__formula()
-        if not result:
+        if not self.__formula():
             return False
         if (
             self.__accept("CONJUNCTION")
@@ -102,10 +97,7 @@ class Parser:
             or self.__accept("IMPLICATION")
             or self.__accept("EQUIVALENT")
         ):
-            right = self.__formula()
-            if not right:
-                return False
-            return True
+            return self.__formula()
         else:
             return False
 
