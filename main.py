@@ -44,13 +44,15 @@ class Parser:
         self.tokens = generate_tokens(pattern, text)
         self.token = None
         self.next_token = None
+        self.sdnf = False
+        self.sknf = False
         self.__counter = 0
         self.__advance()
         if self.__formula():
             if not self.next_token:
                 return True, self.__counter
-            return False
-        return False
+            return False, -1
+        return False, -1
 
     def __advance(self):
         self.token, self.next_token = self.next_token, next(self.tokens, None)
@@ -101,8 +103,31 @@ class Parser:
         else:
             return False
 
+    def check_nf(self, text, nf_type):
+        types = {"sknf": [CONJUNCTION, DISJUNCTION], "sdnf": [DISJUNCTION, CONJUNCTION]}
+        pat = types[nf_type]
+        symbols = set()
+        for i in generate_tokens(pattern, text):
+            if i.type in ["IMPLICATION", "EQUIVALENT"]:
+                return False
+            if i.type == "SYMBOL":
+                symbols.add(i.value)
+        print(symbols)
+        con = re.split(pat[0], text)[::2]
+        if len(set(con)) < len(con):
+            return False
+        for formula in con:
+            dis = re.split(pat[1], formula[1:-1])[::2]
+
+            for index, _ in enumerate(dis):
+                dis[index] = _.strip("!")
+            if set(dis).symmetric_difference(symbols):
+                return False
+        return True
+
 
 if __name__ == "__main__":
     input_str = input("Enter formula:\n")
     parser = Parser()
-    print(parser.parse(input_str))
+    # print(parser.parse(input_str))
+    print(parser.check_nf(input_str, "sdnf"))
